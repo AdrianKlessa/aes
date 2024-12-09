@@ -74,17 +74,12 @@ class AES:
         return inverse_table
 
     def sbox_affine_transform(self, element: int) -> int:
+        # The vectors representing the bytes are from top to bottom from the least significant to most significant bits
         element_vector = int_to_8bit_vector(element)
-        print("Element vector:")
-        print(element_vector)
-        result = np.dot(self.sbox_affine_transform_matrix, element_vector)
-        print("Multiplied by matrix:")
-        print(result)
-        result = result + self.sbox_affine_transform_vector
-        print("With added vector:")
-        print(result)
-        result = result.T[0].tolist()
-        result = "".join((str(i % 2) for i in result)).ljust(8, "0")
+        result = np.dot(self.sbox_affine_transform_matrix, element_vector)%2
+        result = (result + self.sbox_affine_transform_vector) %2
+        result = result.T[0].tolist()[::-1]
+        result = "".join((str(i%2) for i in result)).ljust(8, "0")
         result = int(result, 2)
         return result
 
@@ -101,7 +96,7 @@ def sbox_get_polynomial(number: int) -> Polynomial:
 def int_to_8bit_vector(number: int):
     binary_representation = bin(number).replace("0b", "")
     binary_representation = binary_representation.rjust(8, "0")
-    binary_list = [int(i) for i in binary_representation]
+    binary_list = [int(i) for i in binary_representation][::-1]
     return np.array(binary_list, ndmin=2).T
 
 

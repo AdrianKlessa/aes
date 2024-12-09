@@ -7,7 +7,7 @@ from aes_cipher import AES
 class AesTest(unittest.TestCase):
     def test_sub_bytes(self):
         state_before = np.array((
-            [0x19, 0xA0, 0x9A, 0xe9],
+            [0x19, 0xA0, 0x9A, 0xE9],
             [0x3D, 0xF4, 0xC6, 0xF8],
             [0xE3, 0xE2, 0x8D, 0x48],
             [0xBE, 0x2B, 0x2A, 0x08]
@@ -78,9 +78,9 @@ class AesTest(unittest.TestCase):
         num_2 = 0  #0b00000000
         num_3 = 4  #0b00000100
 
-        expected_1 = np.array([0, 0, 0, 0, 0, 1, 1, 1], ndmin=2).T
+        expected_1 = np.array([1,1,1,0,0,0,0,0], ndmin=2).T
         expected_2 = np.array([0, 0, 0, 0, 0, 0, 0, 0], ndmin=2).T
-        expected_3 = np.array([0, 0, 0, 0, 0, 1, 0, 0], ndmin=2).T
+        expected_3 = np.array([0, 0, 1, 0, 0, 0, 0, 0], ndmin=2).T
 
         actual_1 = aes_cipher.int_to_8bit_vector(num_1)
         actual_2 = aes_cipher.int_to_8bit_vector(num_2)
