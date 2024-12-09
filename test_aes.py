@@ -49,6 +49,15 @@ class AesTest(unittest.TestCase):
         state_actual = aes.state
         self.assertTrue(np.array_equal(state_expected, state_actual))
 
+    def test_inverse(self):
+        aes = AES()
+        inverse_table = aes.inverse_table
+        self.assertEqual(0x00,inverse_table[0x00])
+        self.assertEqual(0x1C, inverse_table[0xFF])
+        self.assertEqual(0x5B, inverse_table[0xF0])
+        self.assertEqual(0xC7, inverse_table[0x0F])
+        self.assertEqual(0xB6, inverse_table[0x78])
+
     def test_mix_cols(self):
         pass
 
