@@ -98,8 +98,3 @@ def int_to_8bit_vector(number: int):
     binary_representation = binary_representation.rjust(8, "0")
     binary_list = [int(i) for i in binary_representation][::-1]
     return np.array(binary_list, ndmin=2).T
-
-
-aes_instance = AES()
-
-print(aes_instance.inverse_table)

@@ -25,8 +25,6 @@ class AesTest(unittest.TestCase):
         aes.sub_bytes()
         state_actual = aes.state
 
-        print(state_expected)
-        print(state_actual)
         self.assertTrue(np.array_equal(state_expected, state_actual))
 
     def test_shift_rows(self):
@@ -85,9 +83,6 @@ class AesTest(unittest.TestCase):
         actual_1 = aes_cipher.int_to_8bit_vector(num_1)
         actual_2 = aes_cipher.int_to_8bit_vector(num_2)
         actual_3 = aes_cipher.int_to_8bit_vector(num_3)
-
-        print(expected_1)
-        print(actual_1)
 
         self.assertTrue(np.array_equal(expected_1, actual_1))
         self.assertTrue(np.array_equal(expected_2, actual_2))
