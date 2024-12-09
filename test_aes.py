@@ -57,6 +57,8 @@ class AesTest(unittest.TestCase):
         self.assertEqual(0xB6, inverse_table[0x78])
 
     def test_mix_cols(self):
+        # There are test vectors on Wikipedia:
+        # https://en.wikipedia.org/wiki/Rijndael_MixColumns#Test_vectors_for_MixColumn()
         pass
 
     def test_add_round_key(self):
