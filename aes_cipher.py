@@ -63,47 +63,19 @@ class AES:
         pass
 
     def mix_single_column(self, column):
-        # TODO: Clean this up
-        print(column.shape)
-        print(column)
-        print("0x53 as a polynomial:")
-        print(sbox_get_polynomial(0x53))
-        print("0x2d as a polynomial:")
-        print(sbox_get_polynomial(0x2d))
-        modulo_polynomial = Polynomial([1, 1, 0, 1, 1, 0, 0, 0, 1])
         vector_poly = np.array([sbox_get_polynomial(column[0][0]),
                                 sbox_get_polynomial(column[1][0]),
                                 sbox_get_polynomial(column[2][0]),
                                 sbox_get_polynomial(column[3][0])], ndmin=2).T
-
-        d0 = sbox_get_polynomial(column[0][0])
-        d1 = sbox_get_polynomial(column[1][0])
-        d2 = sbox_get_polynomial(column[2][0])
-        d3 = sbox_get_polynomial(column[3][0])
-        print("Supposedly first result:")
-        print(reduce_element_modulo(Polynomial([2])*d0 + Polynomial([3])*d1+Polynomial([1])*d2+Polynomial([1])*d3,Polynomial([1,1,0,1,1,0,0,0,1]),2))
-        print("vector poly:")
-        print(vector_poly)
         result = np.dot(self.mix_columns_matrix, vector_poly)
-        #reduce_array_modulo(result, Polynomial([1, 1, 0, 1, 1, 0, 0, 0, 1]), 2)
-        #reduce_array_modulo(result, Polynomial([1,0,0,0,1]), 2)
         reduce_array_modulo(result, Polynomial([1, 1, 0, 1, 1, 0, 0, 0, 1]), 2)
-        print("result:")
-        print(result)
-        print(result.shape)
         result_int = []
         for (i,j), element in np.ndenumerate(result):
-            print("a")
-            _, el = element.divide_by(modulo_polynomial, 2)
-            print(f"element: {el}")
-            print(f"coefficients: {el.coefficients.tolist()}")
-            int_coefficients = el.coefficients.tolist()
+            int_coefficients = element.coefficients.tolist()
             binary_repr = "".join((str(i) for i in int_coefficients))
             binary_repr = binary_repr[::-1].rjust(8, "0")
-            print(f"binary_repr: {binary_repr}")
             integer_repr = int(binary_repr, 2)
             result_int.append(integer_repr)
-        print(result_int)
         return np.array(result_int, ndmin=2).T
 
 

@@ -70,7 +70,7 @@ class AesTest(unittest.TestCase):
         vec4 = np.array([0xc6, 0xc6, 0xc6, 0xc6], ndmin=2).T
         vec5 = np.array([0xd4, 0xd4, 0xd4, 0xd5], ndmin=2).T
         vec6 = np.array([0x2d, 0x26, 0x31, 0x4c], ndmin=2).T
-        vec7 = np.array([0, 0, 0, 0], ndmin=2).T
+        vec7 = np.array([0x00, 0x00, 0x00, 0x00], ndmin=2).T
 
         vec1_mixed = np.array([0x5d,0xe0,0x70,0xbb],ndmin=2).T
         vec2_mixed = np.array([0x9f, 0xdc, 0x58, 0x9d], ndmin=2).T
@@ -87,10 +87,6 @@ class AesTest(unittest.TestCase):
         actual_mixed_5 = aes.mix_single_column(vec5)
         actual_mixed_6 = aes.mix_single_column(vec6)
         actual_mixed_7 = aes.mix_single_column(vec7)
-
-        print("-----")
-        print(vec1_mixed)
-        print(actual_mixed_1)
 
         self.assertTrue(np.array_equal(vec1_mixed, actual_mixed_1))
         self.assertTrue(np.array_equal(vec2_mixed, actual_mixed_2))
