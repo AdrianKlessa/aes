@@ -61,6 +61,45 @@ class AesTest(unittest.TestCase):
         # https://en.wikipedia.org/wiki/Rijndael_MixColumns#Test_vectors_for_MixColumn()
         pass
 
+    def test_mix_single_column(self):
+
+        aes = AES()
+        vec1 = np.array([0x63,0x47,0xa2,0xf0], ndmin=2).T
+        vec2 = np.array([0xf2, 0x0a, 0x22, 0x5c], ndmin=2).T
+        vec3 = np.array([0x01, 0x01, 0x01, 0x01], ndmin=2).T
+        vec4 = np.array([0xc6, 0xc6, 0xc6, 0xc6], ndmin=2).T
+        vec5 = np.array([0xd4, 0xd4, 0xd4, 0xd5], ndmin=2).T
+        vec6 = np.array([0x2d, 0x26, 0x31, 0x4c], ndmin=2).T
+        vec7 = np.array([0, 0, 0, 0], ndmin=2).T
+
+        vec1_mixed = np.array([0x5d,0xe0,0x70,0xbb],ndmin=2).T
+        vec2_mixed = np.array([0x9f, 0xdc, 0x58, 0x9d], ndmin=2).T
+        vec3_mixed = np.array([0x01, 0x01, 0x01, 0x01], ndmin=2).T
+        vec4_mixed = np.array([0xc6,0xc6, 0xc6, 0xc6], ndmin=2).T
+        vec5_mixed = np.array([0xd5,0xd5, 0xd7, 0xd6], ndmin=2).T
+        vec6_mixed = np.array([0x4d,0x7e,0xbd, 0xf8], ndmin=2).T
+        vec7_mixed = np.array([0x00, 0x00, 0x00, 0x00], ndmin=2).T
+
+        actual_mixed_1 = aes.mix_single_column(vec1)
+        actual_mixed_2 = aes.mix_single_column(vec2)
+        actual_mixed_3 = aes.mix_single_column(vec3)
+        actual_mixed_4 = aes.mix_single_column(vec4)
+        actual_mixed_5 = aes.mix_single_column(vec5)
+        actual_mixed_6 = aes.mix_single_column(vec6)
+        actual_mixed_7 = aes.mix_single_column(vec7)
+
+        print("-----")
+        print(vec1_mixed)
+        print(actual_mixed_1)
+
+        self.assertTrue(np.array_equal(vec1_mixed, actual_mixed_1))
+        self.assertTrue(np.array_equal(vec2_mixed, actual_mixed_2))
+        self.assertTrue(np.array_equal(vec3_mixed, actual_mixed_3))
+        self.assertTrue(np.array_equal(vec4_mixed, actual_mixed_4))
+        self.assertTrue(np.array_equal(vec5_mixed, actual_mixed_5))
+        self.assertTrue(np.array_equal(vec6_mixed, actual_mixed_6))
+        self.assertTrue(np.array_equal(vec7_mixed, actual_mixed_7))
+
     def test_add_round_key(self):
         pass
 
