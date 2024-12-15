@@ -57,12 +57,28 @@ class AesTest(unittest.TestCase):
         self.assertEqual(0xB6, inverse_table[0x78])
 
     def test_mix_cols(self):
-        # There are test vectors on Wikipedia:
-        # https://en.wikipedia.org/wiki/Rijndael_MixColumns#Test_vectors_for_MixColumn()
-        pass
+        state_before = np.array((
+            [0xd4, 0xe0, 0xb8, 0x1e],
+            [0xbf, 0xb4, 0x41, 0x27],
+            [0x5d, 0x52, 0x11, 0x98],
+            [0x30, 0xae, 0xf1, 0xe5],
+        ))
+
+        aes = AES()
+        aes.set_state(state_before)
+        aes.mix_columns()
+        state_expected = np.array((
+            [0x04,0xe0,0x48,0x28],
+            [0x66,0xcb,0xf8,0x06],
+            [0x81,0x19,0xd3,0x26],
+            [0xe5,0x9a,0x7a,0x4c]
+        ))
+        state_actual = aes.state
+        self.assertTrue(np.array_equal(state_expected, state_actual))
 
     def test_mix_single_column(self):
-
+        # There are test vectors on Wikipedia:
+        # https://en.wikipedia.org/wiki/Rijndael_MixColumns#Test_vectors_for_MixColumn()
         aes = AES()
         vec1 = np.array([0x63,0x47,0xa2,0xf0], ndmin=2).T
         vec2 = np.array([0xf2, 0x0a, 0x22, 0x5c], ndmin=2).T
@@ -97,7 +113,31 @@ class AesTest(unittest.TestCase):
         self.assertTrue(np.array_equal(vec7_mixed, actual_mixed_7))
 
     def test_add_round_key(self):
-        pass
+        state_before = np.array((
+            [0x04, 0xe0, 0x48, 0x28],
+            [0x66, 0xcb, 0xf8, 0x06],
+            [0x81, 0x19, 0xd3, 0x26],
+            [0xe5, 0x9a, 0x7a, 0x4c]
+        ))
+
+        round_key_value = np.array((
+            [0xa0,0x88,0x23,0x2a],
+            [0xfa,0x54,0xa3,0x6c],
+            [0xfe,0x2c,0x39,0x76],
+            [0x17,0xb1,0x39,0x05]
+        ))
+
+        aes = AES()
+        aes.set_state(state_before)
+        aes.add_round_key(round_key_value)
+        state_expected = np.array((
+            [0xa4,0x68,0x6b,0x02],
+            [0x9c,0x9f,0x5b,0x6a],
+            [0x7f,0x35,0xea,0x50],
+            [0xf2,0x2b,0x43,0x49]
+        ))
+        state_actual = aes.state
+        self.assertTrue(np.array_equal(state_expected, state_actual))
 
     def test_encrypt(self):
         pass

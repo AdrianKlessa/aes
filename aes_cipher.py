@@ -60,7 +60,10 @@ class AES:
             self.state[i] = np.roll(self.state[i], shift=-i)
 
     def mix_columns(self):
-        pass
+        for i in range(4):
+            print("column:")
+            print(self.state[:,[i]])
+            self.state[:,[i]] = self.mix_single_column(self.state[:,[i]])
 
     def mix_single_column(self, column):
         vector_poly = np.array([sbox_get_polynomial(column[0][0]),
@@ -80,7 +83,7 @@ class AES:
 
 
 
-    def add_round_key(self):
+    def add_round_key(self, round_key_value):
         pass
 
     def encrypt(self, plain_text):
