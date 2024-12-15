@@ -84,7 +84,7 @@ class AES:
 
 
     def add_round_key(self, round_key_value):
-        pass
+        self.state = np.bitwise_xor(self.state, round_key_value)
 
     def encrypt(self, plain_text):
         pass
