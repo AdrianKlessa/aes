@@ -118,6 +118,9 @@ class AES:
         result = int(result, 2)
         return result
 
+    def key_expansion(self, key, no_rounds):
+        pass
+
 
 def mix_cols_get_polynomial(number: int) -> Polynomial:
     binary_representation = bin(number).replace("0b", "")
