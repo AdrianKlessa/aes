@@ -90,10 +90,33 @@ class AES:
     def add_round_key(self, round_key_value):
         self.state = np.bitwise_xor(self.state, round_key_value)
 
-    def encrypt(self, plain_text):
-        pass
+    def encrypt_bytes(self, message_bytes, key, number_of_rounds):
+        if len(message_bytes) != 16:
+            raise ValueError("message_bytes must have 16 bytes")
+        self.state = np.array((
+            [message_bytes[0], message_bytes[4], message_bytes[8], message_bytes[12]],
+            [message_bytes[1], message_bytes[5], message_bytes[9], message_bytes[13]],
+            [message_bytes[2], message_bytes[6], message_bytes[10], message_bytes[14]],
+            [message_bytes[3], message_bytes[7], message_bytes[11], message_bytes[15]]
+        ))
+        expanded_key = self.key_expansion(key, number_of_rounds+1)
+        temp_key = expanded_key_to_round_key(0, expanded_key)
+        self.add_round_key(temp_key)
+        for i in range(1,number_of_rounds):
+            print(f"i: {i}")
+            self.sub_bytes()
+            self.shift_rows()
+            self.mix_columns()
+            round_key = expanded_key_to_round_key(i, expanded_key)
+            self.add_round_key(round_key)
+            print(self.state)
+        temp_key = expanded_key_to_round_key(number_of_rounds, expanded_key)
+        self.sub_bytes()
+        self.shift_rows()
+        self.add_round_key(temp_key)
+        return self.state
 
-    def decrypt(self, encrypted_text):
+    def decrypt_bytes(self, message_bytes):
         pass
 
     def set_state(self, state):
@@ -210,3 +233,8 @@ def expanded_key_to_round_key(round_id, expanded_key):
         [expanded_key[start_index+2], expanded_key[start_index+6], expanded_key[start_index+10], expanded_key[start_index+14]],
         [expanded_key[start_index+3], expanded_key[start_index+7], expanded_key[start_index+11], expanded_key[start_index+15]]
     ))
+np.set_printoptions(formatter={'int':hex})
+message = [0x32,0x43,0xf6,0xa8,0x88,0x5a,0x30,0x8d,0x31,0x31,0x98,0xa2,0xe0,0x37,0x07,0x34]
+aes = AES()
+key = [0x2b,0x7e,0x15,0x16,0x28,0xae,0xd2,0xa6,0xab,0xf7,0x15,0x88,0x09,0xcf,0x4f,0x3c]
+print(aes.encrypt_bytes(message,key,10))
