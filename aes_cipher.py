@@ -1,6 +1,7 @@
 import numpy as np
 from polynomial_helper import multiplicative_inverse, Polynomial
 
+
 def sbox_get_polynomial(number: int) -> Polynomial:
     # Used only for getting the inverse tables for lookup
     # TODO: Potentially change this description xd
@@ -8,6 +9,12 @@ def sbox_get_polynomial(number: int) -> Polynomial:
     binary_representation = list(reversed(binary_representation))
     coeff_list = [int(i) for i in binary_representation]
     return Polynomial(coeff_list)
+
+
+def get_ith_word(i, word_list):
+    return word_list[i * 4:i * 4 + 4]
+
+
 class AES:
     sbox_affine_transform_matrix = np.array((
         [1, 0, 0, 0, 1, 1, 1, 1],
@@ -36,12 +43,11 @@ class AES:
     sbox_inverse_affine_transform_vector = np.array([1, 0, 1, 0, 0, 0, 0, 0], dtype=int, ndmin=2).T
 
     mix_columns_matrix = np.array((
-        [sbox_get_polynomial(2),sbox_get_polynomial(3),sbox_get_polynomial(1),sbox_get_polynomial(1)],
-        [sbox_get_polynomial(1),sbox_get_polynomial(2),sbox_get_polynomial(3),sbox_get_polynomial(1)],
+        [sbox_get_polynomial(2), sbox_get_polynomial(3), sbox_get_polynomial(1), sbox_get_polynomial(1)],
+        [sbox_get_polynomial(1), sbox_get_polynomial(2), sbox_get_polynomial(3), sbox_get_polynomial(1)],
         [sbox_get_polynomial(1), sbox_get_polynomial(1), sbox_get_polynomial(2), sbox_get_polynomial(3)],
         [sbox_get_polynomial(3), sbox_get_polynomial(1), sbox_get_polynomial(1), sbox_get_polynomial(2)],
     ))
-
 
     def __init__(self):
         self.state = np.empty((4, 4), dtype=int)  # Make sure all entries are 0-255
@@ -62,8 +68,8 @@ class AES:
     def mix_columns(self):
         for i in range(4):
             print("column:")
-            print(self.state[:,[i]])
-            self.state[:,[i]] = self.mix_single_column(self.state[:,[i]])
+            print(self.state[:, [i]])
+            self.state[:, [i]] = self.mix_single_column(self.state[:, [i]])
 
     def mix_single_column(self, column):
         vector_poly = np.array([sbox_get_polynomial(column[0][0]),
@@ -73,15 +79,13 @@ class AES:
         result = np.dot(self.mix_columns_matrix, vector_poly)
         reduce_array_modulo(result, Polynomial([1, 1, 0, 1, 1, 0, 0, 0, 1]), 2)
         result_int = []
-        for (i,j), element in np.ndenumerate(result):
+        for (i, j), element in np.ndenumerate(result):
             int_coefficients = element.coefficients.tolist()
             binary_repr = "".join((str(i) for i in int_coefficients))
             binary_repr = binary_repr[::-1].rjust(8, "0")
             integer_repr = int(binary_repr, 2)
             result_int.append(integer_repr)
         return np.array(result_int, ndmin=2).T
-
-
 
     def add_round_key(self, round_key_value):
         self.state = np.bitwise_xor(self.state, round_key_value)
@@ -111,15 +115,63 @@ class AES:
     def sbox_affine_transform(self, element: int) -> int:
         # The vectors representing the bytes are from top to bottom from the least significant to most significant bits
         element_vector = int_to_8bit_vector(element)
-        result = np.dot(self.sbox_affine_transform_matrix, element_vector)%2
-        result = (result + self.sbox_affine_transform_vector) %2
+        result = np.dot(self.sbox_affine_transform_matrix, element_vector) % 2
+        result = (result + self.sbox_affine_transform_vector) % 2
         result = result.T[0].tolist()[::-1]
-        result = "".join((str(i%2) for i in result)).ljust(8, "0")
+        result = "".join((str(i % 2) for i in result)).ljust(8, "0")
         result = int(result, 2)
         return result
 
     def key_expansion(self, key, no_rounds):
-        pass
+        # TODO: Maybe move this and the sub/rot words to another module or sth
+        expanded_key = []
+        N = len(key) // 4
+        for i in range(4 * no_rounds):
+            if i < N:
+                expanded_key.extend(get_ith_word(i, word_list=key))
+                continue
+            if i >= N and i % N == 0:
+                w_1 = get_ith_word(i - N, expanded_key)
+                w_1 = np.array(w_1)
+                w_2 = np.array(get_ith_word(i - 1, expanded_key))
+                r_con_array = np.array((self.get_round_constant(i // N), 0, 0, 0))
+                temp = np.bitwise_xor(w_1, self.sub_word(rot_word(w_2)))
+                temp = np.bitwise_xor(temp, r_con_array)
+                expanded_key.extend(temp.tolist())
+                continue
+            if i >= N > 6 and i % N == 4:
+                w_1 = get_ith_word(i - N, expanded_key)
+                w_1 = np.array(w_1)
+                w_2 = np.array(get_ith_word(i - 1, expanded_key))
+                w_2 = self.sub_word(w_2)
+                temp = np.bitwise_xor(w_1, w_2)
+                expanded_key.extend(temp.tolist())
+                continue
+            w_1 = get_ith_word(i - N, expanded_key)
+            w_1 = np.array(w_1)
+            w_2 = np.array(get_ith_word(i - 1, expanded_key))
+            temp = np.bitwise_xor(w_1, w_2)
+            expanded_key.extend(temp.tolist())
+        return expanded_key
+
+    def get_round_constant(self, i: int):
+        if i < 1:
+            raise ValueError
+        if i == 1:
+            return 1
+        rc_previous = self.get_round_constant(i - 1)
+        if rc_previous < 0x80:
+            return 2 * rc_previous % 256
+        else:
+            return ((2 * rc_previous) ^ 0x11b) % 256
+
+    def sub_word(self, word):
+        return np.array(
+            (self.sbox(word[0]), self.sbox(word[1]), self.sbox(word[2]), self.sbox(word[3]))
+        )
+
+    def sbox(self, entry):
+        return self.sbox_affine_transform(self.inverse_table[entry])
 
 
 def mix_cols_get_polynomial(number: int) -> Polynomial:
@@ -128,17 +180,24 @@ def mix_cols_get_polynomial(number: int) -> Polynomial:
     coeff_list = [int(i) for i in binary_representation]
     return Polynomial(coeff_list)
 
+
 def int_to_8bit_vector(number: int):
     binary_representation = bin(number).replace("0b", "")
     binary_representation = binary_representation.rjust(8, "0")
     binary_list = [int(i) for i in binary_representation][::-1]
     return np.array(binary_list, ndmin=2).T
 
+
 def reduce_array_modulo(array, modulus_polynomial, modulus_number):
     for (i, j), value in np.ndenumerate(array):
-        array[i][j] = reduce_element_modulo(array[i][j],modulus_polynomial, modulus_number)
+        array[i][j] = reduce_element_modulo(array[i][j], modulus_polynomial, modulus_number)
+
 
 def reduce_element_modulo(p: Polynomial, modulus_polynomial, modulus_number):
     a = p.reduced_modulo_scalar(modulus_number)
     _, a = a.divide_by(modulus_polynomial, modulus_number)
     return a
+
+
+def rot_word(word):
+    return np.roll(word, -1)
