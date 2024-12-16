@@ -201,3 +201,12 @@ def reduce_element_modulo(p: Polynomial, modulus_polynomial, modulus_number):
 
 def rot_word(word):
     return np.roll(word, -1)
+
+def expanded_key_to_round_key(round_id, expanded_key):
+    start_index = round_id*16
+    return np.array((
+        [expanded_key[start_index], expanded_key[start_index+4], expanded_key[start_index+8], expanded_key[start_index+12]],
+        [expanded_key[start_index+1], expanded_key[start_index+5], expanded_key[start_index+9], expanded_key[start_index+13]],
+        [expanded_key[start_index+2], expanded_key[start_index+6], expanded_key[start_index+10], expanded_key[start_index+14]],
+        [expanded_key[start_index+3], expanded_key[start_index+7], expanded_key[start_index+11], expanded_key[start_index+15]]
+    ))
