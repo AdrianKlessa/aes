@@ -1,6 +1,6 @@
 import unittest
 import cipher_utils
-
+import numpy as np
 class CipherUtilsTest(unittest.TestCase):
     def test_padding(self):
         m1 = [4]*4 # Four 4s
@@ -64,3 +64,27 @@ class CipherUtilsTest(unittest.TestCase):
         encoded = cipher_utils.text_to_byte_list(message)
         decoded = cipher_utils.byte_list_to_text(encoded)
         self.assertEqual(message, decoded)
+
+    def test_seq_to_block(self):
+        seq = [i for i in range(16)]
+        expected = np.array((
+            [0,4,8,12],
+            [1,5,9,13],
+            [2,6,10,14],
+            [3,7,11,15]
+        ))
+        converted = cipher_utils.int_list_to_block(seq)
+        self.assertTrue(np.array_equal(expected,converted))
+
+    def test_block_to_seq(self):
+        block = np.array((
+            [0,4,8,12],
+            [1,5,9,13],
+            [2,6,10,14],
+            [3,7,11,15]
+        ))
+
+        expected = [i for i in range(16)]
+
+        converted = cipher_utils.block_to_int_list(block)
+        self.assertSequenceEqual(expected, converted)
