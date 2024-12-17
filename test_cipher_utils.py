@@ -3,8 +3,8 @@ import cipher_utils
 import numpy as np
 class CipherUtilsTest(unittest.TestCase):
     def test_padding(self):
-        m1 = [4]*4 # Four 4s
-        m2 = [0]*32 # 32 0s
+        m1 = [4]*4
+        m2 = [0]*32
         m3 = [7]*57
 
         m1_padded = cipher_utils.pad_message(m1)
@@ -18,6 +18,7 @@ class CipherUtilsTest(unittest.TestCase):
         self.assertSequenceEqual(expected_1, m1_padded)
         self.assertSequenceEqual(expected_2, m2_padded)
         self.assertSequenceEqual(expected_3, m3_padded)
+
     def test_unpadding(self):
         m1 = [4] * 4 + [12] * 12
         m2 = [0] * 32 + [16] * 16
@@ -37,7 +38,6 @@ class CipherUtilsTest(unittest.TestCase):
         self.assertSequenceEqual(expected_2, unpadded_2)
         self.assertSequenceEqual(expected_3, unpadded_3)
         self.assertSequenceEqual(expected_4, unpadded_4)
-
 
     def test_pad_unpad(self):
         m1 = [i for i in range(4)]
@@ -59,6 +59,7 @@ class CipherUtilsTest(unittest.TestCase):
         self.assertSequenceEqual(m2, m2_unpadded)
         self.assertSequenceEqual(m3, m3_unpadded)
         self.assertSequenceEqual(m4, m4_unpadded)
+
     def test_bytes_encoding(self):
         message = "This is a test message.　テストメッセージです。　漢字も対応。"
         encoded = cipher_utils.text_to_byte_list(message)
