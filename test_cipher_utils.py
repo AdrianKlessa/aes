@@ -59,3 +59,8 @@ class CipherUtilsTest(unittest.TestCase):
         self.assertSequenceEqual(m2, m2_unpadded)
         self.assertSequenceEqual(m3, m3_unpadded)
         self.assertSequenceEqual(m4, m4_unpadded)
+    def test_bytes_encoding(self):
+        message = "This is a test message.　テストメッセージです。　漢字も対応。"
+        encoded = cipher_utils.text_to_byte_list(message)
+        decoded = cipher_utils.byte_list_to_text(encoded)
+        self.assertEqual(message, decoded)

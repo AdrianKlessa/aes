@@ -26,3 +26,12 @@ def unpad_message(message: Sequence[int]):
     if not all(x==padding_length for x in padding):
         raise ValueError('Invalid padding')
     return message[:-padding_length]
+
+def text_to_byte_list(text: str) -> Sequence[int]:
+    res = bytes(text, 'utf-8')
+    res = list(res)
+    return res
+
+def byte_list_to_text(byte_list: Sequence[int]) -> str:
+    bytes_of_values = bytes(byte_list)
+    return bytes_of_values.decode("utf-8")
