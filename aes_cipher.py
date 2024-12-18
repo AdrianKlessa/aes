@@ -116,7 +116,7 @@ class AES:
         self.add_round_key(temp_key)
         return self.state
 
-    def decrypt_bytes(self, message_bytes):
+    def decrypt_bytes(self, message_bytes, key, number_of_rounds):
         pass
 
     def set_state(self, state):
