@@ -61,15 +61,25 @@ class AES:
             result = self.sbox_affine_transform(result)
             self.state[i][j] = result
 
+    def inverse_sub_bytes(self):
+        # Sub bytes would be its own inverse if we only used the lookup table (many implementations use that)
+        pass
+
     def shift_rows(self):
         for i in range(1, 4):
             self.state[i] = np.roll(self.state[i], shift=-i)
+
+    def inverse_shift_rows(self):
+        pass
 
     def mix_columns(self):
         for i in range(4):
             print("column:")
             print(self.state[:, [i]])
             self.state[:, [i]] = self.mix_single_column(self.state[:, [i]])
+
+    def inverse_mix_columns(self):
+        pass
 
     def mix_single_column(self, column):
         vector_poly = np.array([sbox_get_polynomial(column[0][0]),
@@ -87,7 +97,11 @@ class AES:
             result_int.append(integer_repr)
         return np.array(result_int, ndmin=2).T
 
+    def inverse_mix_single_column(self, column):
+        pass
+
     def add_round_key(self, round_key_value):
+        # Since it's just XOR it is its own inverse (X^Y^Y = X)
         self.state = np.bitwise_xor(self.state, round_key_value)
 
     def encrypt_bytes(self, message_bytes, key, number_of_rounds):
