@@ -63,7 +63,10 @@ class AES:
 
     def inverse_sub_bytes(self):
         # Sub bytes would be its own inverse if we only used the lookup table (many implementations use that)
-        pass
+        for (i, j), value in np.ndenumerate(self.state):
+            result = self.sbox_inverse_affine_transform(value)
+            result = self.inverse_table[result]
+            self.state[i][j] = result
 
     def shift_rows(self):
         for i in range(1, 4):
@@ -155,6 +158,15 @@ class AES:
         element_vector = int_to_8bit_vector(element)
         result = np.dot(self.sbox_affine_transform_matrix, element_vector) % 2
         result = (result + self.sbox_affine_transform_vector) % 2
+        result = result.T[0].tolist()[::-1]
+        result = "".join((str(i % 2) for i in result)).ljust(8, "0")
+        result = int(result, 2)
+        return result
+
+    def sbox_inverse_affine_transform(self, element: int)->int:
+        element_vector = int_to_8bit_vector(element)
+        result = np.dot(self.sbox_inverse_affine_transform_matrix, element_vector) % 2
+        result = (result + self.sbox_inverse_affine_transform_vector) % 2
         result = result.T[0].tolist()[::-1]
         result = "".join((str(i % 2) for i in result)).ljust(8, "0")
         result = int(result, 2)
