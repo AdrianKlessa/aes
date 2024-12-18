@@ -70,7 +70,8 @@ class AES:
             self.state[i] = np.roll(self.state[i], shift=-i)
 
     def inverse_shift_rows(self):
-        pass
+        for i in range(1, 4):
+            self.state[i] = np.roll(self.state[i], shift=i)
 
     def mix_columns(self):
         for i in range(4):
