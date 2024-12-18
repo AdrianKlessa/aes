@@ -112,7 +112,6 @@ class AES:
                                 sbox_get_polynomial(column[1][0]),
                                 sbox_get_polynomial(column[2][0]),
                                 sbox_get_polynomial(column[3][0])], ndmin=2).T
-        print(vector_poly)
         result = np.dot(self.inverse_mix_columns_matrix, vector_poly)
         reduce_array_modulo(result, Polynomial([1, 1, 0, 1, 1, 0, 0, 0, 1]), 2)
         result_int = []
@@ -142,13 +141,11 @@ class AES:
         temp_key = expanded_key_to_round_key(0, expanded_key)
         self.add_round_key(temp_key)
         for i in range(1,number_of_rounds):
-            print(f"i: {i}")
             self.sub_bytes()
             self.shift_rows()
             self.mix_columns()
             round_key = expanded_key_to_round_key(i, expanded_key)
             self.add_round_key(round_key)
-            print(self.state)
         temp_key = expanded_key_to_round_key(number_of_rounds, expanded_key)
         self.sub_bytes()
         self.shift_rows()
