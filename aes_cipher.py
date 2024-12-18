@@ -49,6 +49,13 @@ class AES:
         [sbox_get_polynomial(3), sbox_get_polynomial(1), sbox_get_polynomial(1), sbox_get_polynomial(2)],
     ))
 
+    inverse_mix_columns_matrix = np.array((
+        [sbox_get_polynomial(0x0e), sbox_get_polynomial(0x0b), sbox_get_polynomial(0x0d), sbox_get_polynomial(0x09)],
+        [sbox_get_polynomial(0x09), sbox_get_polynomial(0x0e), sbox_get_polynomial(0x0b), sbox_get_polynomial(0x0d)],
+        [sbox_get_polynomial(0x0d), sbox_get_polynomial(0x09), sbox_get_polynomial(0x0e), sbox_get_polynomial(0x0b)],
+        [sbox_get_polynomial(0x0b), sbox_get_polynomial(0x0d), sbox_get_polynomial(0x09), sbox_get_polynomial(0x0e)],
+    ))
+
     def __init__(self):
         self.state = np.empty((4, 4), dtype=int)  # Make sure all entries are 0-255
         self.inverse_table = self.generate_inverse_table()
@@ -78,12 +85,11 @@ class AES:
 
     def mix_columns(self):
         for i in range(4):
-            print("column:")
-            print(self.state[:, [i]])
             self.state[:, [i]] = self.mix_single_column(self.state[:, [i]])
 
     def inverse_mix_columns(self):
-        pass
+        for i in range(4):
+            self.state[:, [i]] = self.inverse_mix_single_column(self.state[:, [i]])
 
     def mix_single_column(self, column):
         vector_poly = np.array([sbox_get_polynomial(column[0][0]),
@@ -102,7 +108,21 @@ class AES:
         return np.array(result_int, ndmin=2).T
 
     def inverse_mix_single_column(self, column):
-        pass
+        vector_poly = np.array([sbox_get_polynomial(column[0][0]),
+                                sbox_get_polynomial(column[1][0]),
+                                sbox_get_polynomial(column[2][0]),
+                                sbox_get_polynomial(column[3][0])], ndmin=2).T
+        print(vector_poly)
+        result = np.dot(self.inverse_mix_columns_matrix, vector_poly)
+        reduce_array_modulo(result, Polynomial([1, 1, 0, 1, 1, 0, 0, 0, 1]), 2)
+        result_int = []
+        for (i, j), element in np.ndenumerate(result):
+            int_coefficients = element.coefficients.tolist()
+            binary_repr = "".join((str(i) for i in int_coefficients))
+            binary_repr = binary_repr[::-1].rjust(8, "0")
+            integer_repr = int(binary_repr, 2)
+            result_int.append(integer_repr)
+        return np.array(result_int, ndmin=2).T
 
     def add_round_key(self, round_key_value):
         # Since it's just XOR it is its own inverse (X^Y^Y = X)
