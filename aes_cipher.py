@@ -131,6 +131,7 @@ class AES:
     def encrypt_bytes(self, message_bytes, key, number_of_rounds):
         if len(message_bytes) != 16:
             raise ValueError("message_bytes must have 16 bytes")
+        # TODO: Use the new cipher_utils function for this
         self.state = np.array((
             [message_bytes[0], message_bytes[4], message_bytes[8], message_bytes[12]],
             [message_bytes[1], message_bytes[5], message_bytes[9], message_bytes[13]],
@@ -155,7 +156,29 @@ class AES:
         return self.state
 
     def decrypt_bytes(self, message_bytes, key, number_of_rounds):
-        pass
+        if len(message_bytes) != 16:
+            raise ValueError("message_bytes must have 16 bytes")
+        # TODO: Use the new cipher_utils function for this
+        self.state = np.array((
+            [message_bytes[0], message_bytes[4], message_bytes[8], message_bytes[12]],
+            [message_bytes[1], message_bytes[5], message_bytes[9], message_bytes[13]],
+            [message_bytes[2], message_bytes[6], message_bytes[10], message_bytes[14]],
+            [message_bytes[3], message_bytes[7], message_bytes[11], message_bytes[15]]
+        ))
+        expanded_key = self.key_expansion(key, number_of_rounds+1)
+        temp_key = expanded_key_to_round_key(number_of_rounds, expanded_key)
+        self.add_round_key(temp_key)
+        self.inverse_shift_rows()
+        self.inverse_sub_bytes()
+        for i in reversed(range(1, number_of_rounds)):
+            round_key = expanded_key_to_round_key(i, expanded_key)
+            self.add_round_key(round_key)
+            self.inverse_mix_columns()
+            self.inverse_shift_rows()
+            self.inverse_sub_bytes()
+        temp_key = expanded_key_to_round_key(0, expanded_key)
+        self.add_round_key(temp_key)
+        return self.state
 
     def set_state(self, state):
         self.state = state
