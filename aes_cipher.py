@@ -1,4 +1,8 @@
+from typing import Optional
+
 import numpy as np
+
+import cipher_utils
 from polynomial_helper import multiplicative_inverse, Polynomial
 
 
@@ -179,6 +183,51 @@ class AES:
 
     def set_state(self, state):
         self.state = state
+
+    def encrypt_message_cbc(self, message_bytes: list[int], key: list[int], number_of_rounds: int, iv: Optional[list[int]] = None):
+        if not iv:
+            iv = cipher_utils.generate_iv(16)
+        iv = cipher_utils.int_list_to_block(iv)
+        no_blocks = len(message_bytes)//16
+        blocks = []
+        encrypted_blocks = []
+        for i in range(no_blocks):
+            block = message_bytes[i*16:(i+1)*16]
+            block = cipher_utils.int_list_to_block(block)
+            blocks.append(block)
+
+        for i in range(no_blocks):
+            if i ==0:
+                blocks[0] = np.bitwise_xor(blocks[0], iv)
+            else:
+                blocks[i] = np.bitwise_xor(blocks[i], encrypted_blocks[i-1])
+            encrypted_blocks.append(self.encrypt_bytes(cipher_utils.block_to_int_list(blocks[i]), key, number_of_rounds))
+        encrypted_message = []
+        for block in encrypted_blocks:
+            encrypted_message.extend(cipher_utils.block_to_int_list(block))
+        return encrypted_message, cipher_utils.block_to_int_list(iv)
+
+
+    def decrypt_message_cbc(self, message_bytes: list[int], key: list[int], number_of_rounds: int, iv: list[int]):
+        iv = cipher_utils.int_list_to_block(iv)
+        no_blocks = len(message_bytes) // 16
+        blocks = []
+        decrypted_blocks = []
+        for i in range(no_blocks):
+            block = message_bytes[i*16:(i+1)*16]
+            block = cipher_utils.int_list_to_block(block)
+            blocks.append(block)
+        for i in range(no_blocks):
+            decrypted_blocks.append(
+                self.decrypt_bytes(cipher_utils.block_to_int_list(blocks[i]), key, number_of_rounds))
+            if i ==0:
+                decrypted_blocks[0] = np.bitwise_xor(decrypted_blocks[0], iv)
+            else:
+                decrypted_blocks[i] = np.bitwise_xor(decrypted_blocks[i], blocks[i-1])
+        decrypted_message = []
+        for block in decrypted_blocks:
+            decrypted_message.extend(cipher_utils.block_to_int_list(block))
+        return decrypted_message
 
     def generate_inverse_table(self):
         inverse_table = {0: 0}

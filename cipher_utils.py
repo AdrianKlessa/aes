@@ -1,5 +1,6 @@
 from typing import Sequence
 import numpy as np
+import secrets
 
 def pad_message(message: Sequence[int]):
     """
@@ -53,3 +54,6 @@ def block_to_int_list(block) -> Sequence[int]:
             block[0][1], block[1][1], block[2][1], block[3][1],
             block[0][2], block[1][2], block[2][2], block[3][2],
             block[0][3], block[1][3], block[2][3], block[3][3]]
+
+def generate_iv(byte_count: int) -> Sequence[int]:
+    return list(secrets.token_bytes(byte_count))
