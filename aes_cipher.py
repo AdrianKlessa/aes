@@ -186,7 +186,7 @@ class AES:
 
     def encrypt_message_cbc(self, message_bytes: list[int], key: list[int], number_of_rounds: int, iv: Optional[list[int]] = None):
         if not iv:
-            iv = cipher_utils.generate_iv(16)
+            iv = cipher_utils.generate_iv()
         iv = cipher_utils.int_list_to_block(iv)
         no_blocks = len(message_bytes)//16
         blocks = []
@@ -229,6 +229,21 @@ class AES:
             decrypted_message.extend(cipher_utils.block_to_int_list(block))
         return decrypted_message
 
+    def encrypt_string(self, string_to_encrypt):
+        # High-level function to generate a key, iv and use them to encrypt a message
+        key = cipher_utils.generate_key_aes_256()
+        iv = cipher_utils.generate_iv()
+        message = cipher_utils.text_to_byte_list(string_to_encrypt)
+        message = cipher_utils.pad_message(message)
+        encrypted, iv = self.encrypt_message_cbc(message, key, 14, iv)
+        return encrypted, key, iv
+
+    def decrypt_string(self, message_bytes, key: list[int], iv: list[int]):
+        # High-level function to reverse encrypt-string
+        decrypted = self.decrypt_message_cbc(message_bytes, key, 14, iv)
+        message = cipher_utils.unpad_message(decrypted)
+        message = cipher_utils.byte_list_to_text(message)
+        return message
     def generate_inverse_table(self):
         inverse_table = {0: 0}
         modulo_polynomial = Polynomial([1, 1, 0, 1, 1, 0, 0, 0, 1])

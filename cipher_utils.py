@@ -55,5 +55,8 @@ def block_to_int_list(block) -> Sequence[int]:
             block[0][2], block[1][2], block[2][2], block[3][2],
             block[0][3], block[1][3], block[2][3], block[3][3]]
 
-def generate_iv(byte_count: int) -> Sequence[int]:
-    return list(secrets.token_bytes(byte_count))
+def generate_iv() -> Sequence[int]:
+    return list(secrets.token_bytes(16))
+
+def generate_key_aes_256() -> Sequence[int]:
+    return secrets.token_bytes(32)
