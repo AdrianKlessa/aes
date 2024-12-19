@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Sequence
 
 import numpy as np
 
@@ -184,7 +184,7 @@ class AES:
     def set_state(self, state):
         self.state = state
 
-    def encrypt_message_cbc(self, message_bytes: list[int], key: list[int], number_of_rounds: int, iv: Optional[list[int]] = None):
+    def encrypt_message_cbc(self, message_bytes: Sequence[int], key: Sequence[int], number_of_rounds: int, iv: Optional[Sequence[int]] = None):
         if not iv:
             iv = cipher_utils.generate_iv()
         iv = cipher_utils.int_list_to_block(iv)
@@ -208,7 +208,7 @@ class AES:
         return encrypted_message, cipher_utils.block_to_int_list(iv)
 
 
-    def decrypt_message_cbc(self, message_bytes: list[int], key: list[int], number_of_rounds: int, iv: list[int]):
+    def decrypt_message_cbc(self, message_bytes: Sequence[int], key: Sequence[int], number_of_rounds: int, iv: Sequence[int]):
         iv = cipher_utils.int_list_to_block(iv)
         no_blocks = len(message_bytes) // 16
         blocks = []
