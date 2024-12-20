@@ -1,4 +1,4 @@
-from typing import Optional, Sequence
+from typing import Optional, Sequence, Tuple
 
 import numpy as np
 
@@ -7,15 +7,24 @@ from polynomial_helper import multiplicative_inverse, Polynomial
 
 
 def sbox_get_polynomial(number: int) -> Polynomial:
-    # Used only for getting the inverse tables for lookup
-    # TODO: Potentially change this description xd
+    """
+    Returns the polynomial representation of an input number in Rijndael's finite field
+    :param number: Number to represent as a polynomial
+    :return: Polynomial representation of the number
+    """
     binary_representation = bin(number).replace("0b", "")
     binary_representation = list(reversed(binary_representation))
     coeff_list = [int(i) for i in binary_representation]
     return Polynomial(coeff_list)
 
 
-def get_ith_word(i, word_list):
+def get_ith_word(i: int, word_list: Sequence[int])-> Sequence[int]:
+    """
+    Given a list of integers, returns the ith 4-byte word on the list
+    :param i: Index of the word to return
+    :param word_list: List of integers
+    :return: The ith word
+    """
     return word_list[i * 4:i * 4 + 4]
 
 
@@ -59,7 +68,6 @@ class AES:
         [sbox_get_polynomial(0x0d), sbox_get_polynomial(0x09), sbox_get_polynomial(0x0e), sbox_get_polynomial(0x0b)],
         [sbox_get_polynomial(0x0b), sbox_get_polynomial(0x0d), sbox_get_polynomial(0x09), sbox_get_polynomial(0x0e)],
     ))
-
     def __init__(self):
         self.state = np.empty((4, 4), dtype=int)  # Make sure all entries are 0-255
         self.inverse_table = self.generate_inverse_table()
@@ -96,6 +104,11 @@ class AES:
             self.state[:, [i]] = self.inverse_mix_single_column(self.state[:, [i]])
 
     def mix_single_column(self, column):
+        """
+        Given a 2d numpy array of shape (4,1) performs the MixColumns AES step on it
+        :param column: 2d numpy array of shape (4,1)
+        :return: Mixed column
+        """
         vector_poly = np.array([sbox_get_polynomial(column[0][0]),
                                 sbox_get_polynomial(column[1][0]),
                                 sbox_get_polynomial(column[2][0]),
@@ -112,6 +125,11 @@ class AES:
         return np.array(result_int, ndmin=2).T
 
     def inverse_mix_single_column(self, column):
+        """
+        Given a 2d numpy array of shape (4,1) performs the inverse MixColumns AES step on it
+        :param column: 2d numpy array of shape (4,1)
+        :return: Unmixed column
+        """
         vector_poly = np.array([sbox_get_polynomial(column[0][0]),
                                 sbox_get_polynomial(column[1][0]),
                                 sbox_get_polynomial(column[2][0]),
@@ -128,10 +146,22 @@ class AES:
         return np.array(result_int, ndmin=2).T
 
     def add_round_key(self, round_key_value):
+        """
+        Given a (4,4) shape numpy array representing the round key, XORs the round key with the cipher state
+        :param round_key_value: A (4,4) numpy array representing the round key
+        :return:
+        """
         # Since it's just XOR it is its own inverse (X^Y^Y = X)
         self.state = np.bitwise_xor(self.state, round_key_value)
 
-    def encrypt_bytes(self, message_bytes, key, number_of_rounds):
+    def encrypt_bytes(self, message_bytes: Sequence[int], key: Sequence[int], number_of_rounds: int):
+        """
+
+        :param message_bytes: Message to encrypt, given as a sequence of 0-255 integers
+        :param key: A key given as a sequence of 0-255 integers
+        :param number_of_rounds: 10 for AES-128, 12 for AES-192, 14 for AES-256
+        :return: Cipher's state after encryption (block with the encrypted message)
+        """
         if len(message_bytes) != 16:
             raise ValueError("message_bytes must have 16 bytes")
         # TODO: Use the new cipher_utils function for this
@@ -157,6 +187,13 @@ class AES:
         return self.state
 
     def decrypt_bytes(self, message_bytes, key, number_of_rounds):
+        """
+
+        :param message_bytes: Message to encrypt, given as a sequence of 0-255 integers
+        :param key: A key given as a sequence of 0-255 integers
+        :param number_of_rounds: 10 for AES-128, 12 for AES-192, 14 for AES-256
+        :return: Cipher's state after decryption (block with the decrypted message)
+        """
         if len(message_bytes) != 16:
             raise ValueError("message_bytes must have 16 bytes")
         # TODO: Use the new cipher_utils function for this
@@ -184,7 +221,16 @@ class AES:
     def set_state(self, state):
         self.state = state
 
-    def encrypt_message_cbc(self, message_bytes: Sequence[int], key: Sequence[int], number_of_rounds: int, iv: Optional[Sequence[int]] = None):
+    def encrypt_message_cbc(self, message_bytes: Sequence[int], key: Sequence[int], number_of_rounds: int, iv: Optional[Sequence[int]] = None)->Tuple[Sequence[int], Sequence[int]]:
+        """
+        Encrypt a (potentially multi-block) message using CBC mode of operation.
+        If IV is not provided, a random one will be generated
+        :param message_bytes: Message to encrypt, given as a sequence of 0-255 integers
+        :param key: A key given as a sequence of 0-255 integers
+        :param number_of_rounds: 10 for AES-128, 12 for AES-192, 14 for AES-256
+        :param iv: Initialization vector as a sequence of 0-255 integers. Should be random and not reused (nonce)
+        :return: A tuple (encrypted message, initialization_vector)
+        """
         if not iv:
             iv = cipher_utils.generate_iv()
         iv = cipher_utils.int_list_to_block(iv)
@@ -208,7 +254,15 @@ class AES:
         return encrypted_message, cipher_utils.block_to_int_list(iv)
 
 
-    def decrypt_message_cbc(self, message_bytes: Sequence[int], key: Sequence[int], number_of_rounds: int, iv: Sequence[int]):
+    def decrypt_message_cbc(self, message_bytes: Sequence[int], key: Sequence[int], number_of_rounds: int, iv: Sequence[int]) ->Sequence[int]:
+        """
+        Decrypt a message encrypted with CBC mode of operation.
+        :param message_bytes: Message to decrypt, given as a sequence of 0-255 integers
+        :param key: A key given as a sequence of 0-255 integers
+        :param number_of_rounds: 10 for AES-128, 12 for AES-192, 14 for AES-256
+        :param iv: Initialization vector as a sequence of 0-255 integers. Has to be the same as the one used for encryption
+        :return: Decrypted message as a sequence of 0-255 integers
+        """
         iv = cipher_utils.int_list_to_block(iv)
         no_blocks = len(message_bytes) // 16
         blocks = []
@@ -229,8 +283,13 @@ class AES:
             decrypted_message.extend(cipher_utils.block_to_int_list(block))
         return decrypted_message
 
-    def encrypt_string(self, string_to_encrypt):
-        # High-level function to generate a key, iv and use them to encrypt a message
+    def encrypt_string(self, string_to_encrypt: str)->Tuple[Sequence[int], Sequence[int], Sequence[int]]:
+        """
+        High-level function to generate a key, iv and use them to encrypt a message.
+        The key and IV has to be stored in order to later decrypt the message.
+        :param string_to_encrypt: Message to encrypt
+        :return: Tuple with the (encrypted_message, encryption_key, initialization_vector)
+        """
         key = cipher_utils.generate_key_aes_256()
         iv = cipher_utils.generate_iv()
         message = cipher_utils.text_to_byte_list(string_to_encrypt)
@@ -239,7 +298,9 @@ class AES:
         return encrypted, key, iv
 
     def decrypt_string(self, message_bytes, key: list[int], iv: list[int]):
-        # High-level function to reverse encrypt-string
+        """
+        High-level function to reverse encrypt_string
+        """
         decrypted = self.decrypt_message_cbc(message_bytes, key, 14, iv)
         message = cipher_utils.unpad_message(decrypted)
         message = cipher_utils.byte_list_to_text(message)
@@ -276,7 +337,7 @@ class AES:
         result = int(result, 2)
         return result
 
-    def key_expansion(self, key, no_rounds):
+    def key_expansion(self, key: Sequence[int], no_rounds: int):
         # TODO: Maybe move this and the sub/rot words to another module or sth
         expanded_key = []
         N = len(key) // 4
@@ -308,7 +369,10 @@ class AES:
             expanded_key.extend(temp.tolist())
         return expanded_key
 
-    def get_round_constant(self, i: int):
+    def get_round_constant(self, i: int)->int:
+        """
+        Get the i-th round constant used in the AES key schedule
+        """
         if i < 1:
             raise ValueError
         if i == 1:
@@ -319,16 +383,27 @@ class AES:
         else:
             return ((2 * rc_previous) ^ 0x11b) % 256
 
-    def sub_word(self, word):
+    def sub_word(self, word: Sequence[int]):
+        """
+        Perform the AES S-box on every element of a 4-byte word.
+        Used in the AES key schedule.
+        """
         return np.array(
             (self.sbox(word[0]), self.sbox(word[1]), self.sbox(word[2]), self.sbox(word[3]))
         )
 
-    def sbox(self, entry):
+    def sbox(self, entry: int)->int:
+        """
+        Perform the AES S-box on a single byte (int from the range 0-255)
+        """
         return self.sbox_affine_transform(self.inverse_table[entry])
 
 
 def mix_cols_get_polynomial(number: int) -> Polynomial:
+    """
+    Given an integer from the range 0-255, returns its polynomial representation consistent with the one required by
+    the AES MixColumns function
+    """
     binary_representation = bin(number).replace("0b", "")
     binary_representation = list(reversed(binary_representation))
     coeff_list = [int(i) for i in binary_representation]
@@ -336,6 +411,10 @@ def mix_cols_get_polynomial(number: int) -> Polynomial:
 
 
 def int_to_8bit_vector(number: int):
+    """
+    Given an integer from the range 0-255 returns its 8-bit vector representation consistent with the one required by
+    the affine transformation used in the AES S-box
+    """
     binary_representation = bin(number).replace("0b", "")
     binary_representation = binary_representation.rjust(8, "0")
     binary_list = [int(i) for i in binary_representation][::-1]
@@ -354,6 +433,9 @@ def reduce_element_modulo(p: Polynomial, modulus_polynomial, modulus_number):
 
 
 def rot_word(word):
+    """
+    Perform a single rotation on a 4-byte word. Used in the AES key schedule.
+    """
     return np.roll(word, -1)
 
 def expanded_key_to_round_key(round_id, expanded_key):

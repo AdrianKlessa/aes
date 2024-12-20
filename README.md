@@ -1,3 +1,10 @@
+### A simple, naive implementation of AES
+
+Includes implementation of:
+* AES-128, AES-192, AES-256
+* CBC mode of operation for encrypting arbitrarily large data
+* PKCS#7 padding for unambiguous message padding to a multiple of block size
+* Unit tests comparing the program's output to official test vectors
 
 ### Disclaimer:
 
@@ -5,7 +12,8 @@
 
 *The implementations are for educational purposes*
 
-*They are slow, don't use proper sources of entropy and are surely vulnerable to timing and various other attacks*
+*They are slow and surely vulnerable to timing and various other attacks*
+
 
 
 ## Resources used:
