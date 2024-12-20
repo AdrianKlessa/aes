@@ -5,7 +5,7 @@ Includes implementation of:
 * CBC mode of operation for encrypting arbitrarily large data
 * PKCS#7 padding for unambiguous message padding to a multiple of block size
 * Unit tests comparing the program's output to official test vectors
-
+* Helper `encrypt_string`, `decrypt_string` methods for easy encryption of data without converting to bytes
 ### Disclaimer:
 
 ### This code is not safe for real-world usage

@@ -3,30 +3,9 @@ from typing import Optional, Sequence, Tuple
 import numpy as np
 
 import cipher_utils
-from polynomial_helper import multiplicative_inverse, Polynomial
-
-
-def sbox_get_polynomial(number: int) -> Polynomial:
-    """
-    Returns the polynomial representation of an input number in Rijndael's finite field
-    :param number: Number to represent as a polynomial
-    :return: Polynomial representation of the number
-    """
-    binary_representation = bin(number).replace("0b", "")
-    binary_representation = list(reversed(binary_representation))
-    coeff_list = [int(i) for i in binary_representation]
-    return Polynomial(coeff_list)
-
-
-def get_ith_word(i: int, word_list: Sequence[int])-> Sequence[int]:
-    """
-    Given a list of integers, returns the ith 4-byte word on the list
-    :param i: Index of the word to return
-    :param word_list: List of integers
-    :return: The ith word
-    """
-    return word_list[i * 4:i * 4 + 4]
-
+from cipher_utils import get_ith_word
+from polynomial_helper import Polynomial, reduce_array_modulo
+from aes_helpers import int_to_8bit_vector, rot_word, expanded_key_to_round_key, sbox_get_polynomial
 
 class AES:
     sbox_affine_transform_matrix = np.array((
@@ -164,13 +143,7 @@ class AES:
         """
         if len(message_bytes) != 16:
             raise ValueError("message_bytes must have 16 bytes")
-        # TODO: Use the new cipher_utils function for this
-        self.state = np.array((
-            [message_bytes[0], message_bytes[4], message_bytes[8], message_bytes[12]],
-            [message_bytes[1], message_bytes[5], message_bytes[9], message_bytes[13]],
-            [message_bytes[2], message_bytes[6], message_bytes[10], message_bytes[14]],
-            [message_bytes[3], message_bytes[7], message_bytes[11], message_bytes[15]]
-        ))
+        self.state = cipher_utils.int_list_to_block(message_bytes)
         expanded_key = self.key_expansion(key, number_of_rounds+1)
         temp_key = expanded_key_to_round_key(0, expanded_key)
         self.add_round_key(temp_key)
@@ -196,13 +169,7 @@ class AES:
         """
         if len(message_bytes) != 16:
             raise ValueError("message_bytes must have 16 bytes")
-        # TODO: Use the new cipher_utils function for this
-        self.state = np.array((
-            [message_bytes[0], message_bytes[4], message_bytes[8], message_bytes[12]],
-            [message_bytes[1], message_bytes[5], message_bytes[9], message_bytes[13]],
-            [message_bytes[2], message_bytes[6], message_bytes[10], message_bytes[14]],
-            [message_bytes[3], message_bytes[7], message_bytes[11], message_bytes[15]]
-        ))
+        self.state = cipher_utils.int_list_to_block(message_bytes)
         expanded_key = self.key_expansion(key, number_of_rounds+1)
         temp_key = expanded_key_to_round_key(number_of_rounds, expanded_key)
         self.add_round_key(temp_key)
@@ -299,7 +266,7 @@ class AES:
 
     def decrypt_string(self, message_bytes, key: list[int], iv: list[int]):
         """
-        High-level function to reverse encrypt_string
+        High-level function to reversing encrypt_string
         """
         decrypted = self.decrypt_message_cbc(message_bytes, key, 14, iv)
         message = cipher_utils.unpad_message(decrypted)
@@ -338,7 +305,6 @@ class AES:
         return result
 
     def key_expansion(self, key: Sequence[int], no_rounds: int):
-        # TODO: Maybe move this and the sub/rot words to another module or sth
         expanded_key = []
         N = len(key) // 4
         for i in range(4 * no_rounds):
@@ -397,52 +363,3 @@ class AES:
         Perform the AES S-box on a single byte (int from the range 0-255)
         """
         return self.sbox_affine_transform(self.inverse_table[entry])
-
-
-def mix_cols_get_polynomial(number: int) -> Polynomial:
-    """
-    Given an integer from the range 0-255, returns its polynomial representation consistent with the one required by
-    the AES MixColumns function
-    """
-    binary_representation = bin(number).replace("0b", "")
-    binary_representation = list(reversed(binary_representation))
-    coeff_list = [int(i) for i in binary_representation]
-    return Polynomial(coeff_list)
-
-
-def int_to_8bit_vector(number: int):
-    """
-    Given an integer from the range 0-255 returns its 8-bit vector representation consistent with the one required by
-    the affine transformation used in the AES S-box
-    """
-    binary_representation = bin(number).replace("0b", "")
-    binary_representation = binary_representation.rjust(8, "0")
-    binary_list = [int(i) for i in binary_representation][::-1]
-    return np.array(binary_list, ndmin=2).T
-
-
-def reduce_array_modulo(array, modulus_polynomial, modulus_number):
-    for (i, j), value in np.ndenumerate(array):
-        array[i][j] = reduce_element_modulo(array[i][j], modulus_polynomial, modulus_number)
-
-
-def reduce_element_modulo(p: Polynomial, modulus_polynomial, modulus_number):
-    a = p.reduced_modulo_scalar(modulus_number)
-    _, a = a.divide_by(modulus_polynomial, modulus_number)
-    return a
-
-
-def rot_word(word):
-    """
-    Perform a single rotation on a 4-byte word. Used in the AES key schedule.
-    """
-    return np.roll(word, -1)
-
-def expanded_key_to_round_key(round_id, expanded_key):
-    start_index = round_id*16
-    return np.array((
-        [expanded_key[start_index], expanded_key[start_index+4], expanded_key[start_index+8], expanded_key[start_index+12]],
-        [expanded_key[start_index+1], expanded_key[start_index+5], expanded_key[start_index+9], expanded_key[start_index+13]],
-        [expanded_key[start_index+2], expanded_key[start_index+6], expanded_key[start_index+10], expanded_key[start_index+14]],
-        [expanded_key[start_index+3], expanded_key[start_index+7], expanded_key[start_index+11], expanded_key[start_index+15]]
-    ))

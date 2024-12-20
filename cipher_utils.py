@@ -38,6 +38,9 @@ def byte_list_to_text(byte_list: Sequence[int]) -> str:
     return bytes_of_values.decode("utf-8")
 
 def int_list_to_block(int_list: Sequence[int]):
+    """
+    Convert a sequence of integers to a numpy array as used by AES
+    """
     if len(int_list)!=16:
         raise ValueError('Invalid length')
     return np.array((
@@ -48,6 +51,9 @@ def int_list_to_block(int_list: Sequence[int]):
     ))
 
 def block_to_int_list(block) -> Sequence[int]:
+    """
+    Convert a numpy array as used by AES to a sequence of integers
+    """
     if block.shape!= (4,4):
         raise ValueError('Invalid block size')
     return [block[0][0], block[1][0], block[2][0], block[3][0],
@@ -60,3 +66,12 @@ def generate_iv() -> Sequence[int]:
 
 def generate_key_aes_256() -> Sequence[int]:
     return secrets.token_bytes(32)
+
+def get_ith_word(i: int, word_list: Sequence[int])-> Sequence[int]:
+    """
+    Given a list of integers, returns the ith 4-byte word on the list
+    :param i: Index of the word to return
+    :param word_list: List of integers
+    :return: The ith word
+    """
+    return word_list[i * 4:i * 4 + 4]

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Sequence
+from typing import Sequence, Tuple
 
 import numpy as np
 
@@ -230,7 +230,7 @@ class Polynomial:
         return self.multiply_mod(other)
 
 
-def extendedGCD(a, b):
+def extendedGCD(a: int, b: int)-> Tuple[int, int, int]:
     r, r1 = a, b
     s, s1 = 1, 0
     t, t1 = 0, 1
@@ -249,3 +249,13 @@ def multiplicative_inverse(a: int, m: int) -> int:
         return inv % m
     else:
         raise ValueError('Numbers ' + str(a) + ' and ' + str(m) + ' are not coprime.')
+
+def reduce_array_modulo(array, modulus_polynomial, modulus_number):
+    for (i, j), value in np.ndenumerate(array):
+        array[i][j] = reduce_element_modulo(array[i][j], modulus_polynomial, modulus_number)
+
+
+def reduce_element_modulo(p: Polynomial, modulus_polynomial, modulus_number):
+    a = p.reduced_modulo_scalar(modulus_number)
+    _, a = a.divide_by(modulus_polynomial, modulus_number)
+    return a
