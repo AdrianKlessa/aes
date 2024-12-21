@@ -1,5 +1,7 @@
 ### A simple, naive implementation of AES
 
+![Test workflow](https://github.com/AdrianKlessa/aes/actions/workflows/tests_workflow.yml/badge.svg)
+
 Includes implementation of:
 * AES-128, AES-192, AES-256
 * CBC mode of operation for encrypting arbitrarily large data
