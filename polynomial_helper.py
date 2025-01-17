@@ -28,28 +28,16 @@ class Polynomial:
         :param mod_polynomial: Modulus polynomial for reduction
         :return: this*other_polynomial
         """
-        # +2 since the degree is w/o the constant term
-        result_coefficients = [0 for _ in
-                               range(self.coefficients.shape[0] + other_polynomial.coefficients.shape[0] + 2)]
-
-        for i in range(other_polynomial.coefficients.shape[0]):
-            for j in range(self.coefficients.shape[0]):
-                result_coefficients[i + j] += (self.coefficients[j] * other_polynomial.coefficients[i])
-                if mod_number:
-                    result_coefficients[i + j] %= mod_number
-
-        if np.any(result_coefficients):
-            last_nonzero_index = np.max(np.nonzero(result_coefficients))
-            result_coefficients = result_coefficients[:last_nonzero_index + 1]
-        else:
-            result_coefficients = np.array([0], dtype=int)
-
-        if mod_polynomial:
-            temp_polynomial = Polynomial(result_coefficients)
-            q, r = temp_polynomial.divide_by(mod_polynomial, mod_number)
-            return r
+        result_coefficients = np.convolve(self.coefficients, other_polynomial.coefficients)
+        if mod_polynomial is not None:
+            _, result = Polynomial(result_coefficients).divide_by(mod_polynomial, mod_number)
+            return result
+        if mod_number is not None:
+            result_coefficients %= mod_number
+            return Polynomial(result_coefficients)
 
         return Polynomial(result_coefficients)
+
 
     def add_mod(self, other_polynomial: Polynomial, mod_number: int | None = None) -> Polynomial:
         """
@@ -59,25 +47,18 @@ class Polynomial:
         :return: this+other_polynomial
         """
         # this + other
-        if self.degree > other_polynomial.degree:
-            coeffs = np.copy(self.coefficients)
-            for i in range(other_polynomial.degree + 1):
-                coeffs[i] = coeffs[i] + other_polynomial.coefficients[i]
+        len_a = len(self.coefficients)
+        len_b = len(other_polynomial.coefficients)
+        if len_a > len_b:
+            result = self.coefficients.copy()
+            result[:len_b] += other_polynomial.coefficients
         else:
-            coeffs = np.copy(other_polynomial.coefficients)
-            for i in range(self.degree + 1):
-                coeffs[i] = coeffs[i] + self.coefficients[i]
-
-        if np.any(coeffs):
-            last_nonzero_index = np.max(np.nonzero(coeffs))
-            coeffs = coeffs[:last_nonzero_index + 1]
-        else:
-            coeffs = np.array([0], dtype=int)
+            result = other_polynomial.coefficients.copy()
+            result[:len_a] += self.coefficients
 
         if mod_number:
-            for i in range(len(coeffs)):
-                coeffs[i] %= mod_number
-        return Polynomial(coeffs)
+            result %= mod_number
+        return Polynomial(result)
 
     def substract_mod(self, other_polynomial: Polynomial, mod_number: int | None = None) -> Polynomial:
         """
@@ -149,8 +130,8 @@ class Polynomial:
         :param mod_number: Modulus for coefficients
         :return: Multiplicative inverse of this polynomial
         """
-        this = self
-        other = mod_polynomial
+        this = self.reduced_modulo_scalar(mod_number)
+        other = mod_polynomial.reduced_modulo_scalar(mod_number)
         # https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm#Simple_algebraic_field_extensions
         t = Polynomial([0])
         t_prime = Polynomial([1])
@@ -169,7 +150,7 @@ class Polynomial:
         _, r = r.divide_by(mod_polynomial, mod_number)
         if r.degree > 0:
             raise ValueError("The given polynomial is not invertible")
-        temp_x = multiplicative_inverse(r.coefficients[0], mod_number)
+        temp_x = multiplicative_inverse(int(r.coefficients[0]), mod_number)
         return Polynomial([temp_x]).multiply_mod(t, mod_number)
 
     @property
