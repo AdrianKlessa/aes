@@ -93,7 +93,7 @@ class AES:
                                 sbox_get_polynomial(column[2][0]),
                                 sbox_get_polynomial(column[3][0])], ndmin=2).T
         result = np.dot(self.mix_columns_matrix, vector_poly)
-        reduce_array_modulo(result, Polynomial([1, 1, 0, 1, 1, 0, 0, 0, 1]), 2)
+        result = reduce_array_modulo(result, Polynomial([1, 1, 0, 1, 1, 0, 0, 0, 1]), 2)
         result_int = []
         for (i, j), element in np.ndenumerate(result):
             int_coefficients = element.coefficients.tolist()
@@ -114,7 +114,7 @@ class AES:
                                 sbox_get_polynomial(column[2][0]),
                                 sbox_get_polynomial(column[3][0])], ndmin=2).T
         result = np.dot(self.inverse_mix_columns_matrix, vector_poly)
-        reduce_array_modulo(result, Polynomial([1, 1, 0, 1, 1, 0, 0, 0, 1]), 2)
+        result = reduce_array_modulo(result, Polynomial([1, 1, 0, 1, 1, 0, 0, 0, 1]), 2)
         result_int = []
         for (i, j), element in np.ndenumerate(result):
             int_coefficients = element.coefficients.tolist()

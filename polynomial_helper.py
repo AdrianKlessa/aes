@@ -231,10 +231,7 @@ def multiplicative_inverse(a: int, m: int) -> int:
     else:
         raise ValueError('Numbers ' + str(a) + ' and ' + str(m) + ' are not coprime.')
 
-def reduce_array_modulo(array: npt.NDArray[np.int_], modulus_polynomial: Polynomial, modulus_number: int):
-    for (i, j), value in np.ndenumerate(array):
-        array[i][j] = reduce_element_modulo(array[i][j], modulus_polynomial, modulus_number)
-def reduce_element_modulo(p: Polynomial, modulus_polynomial: Polynomial, modulus_number: int):
-    a = p.reduced_modulo_scalar(modulus_number)
-    _, a = a.divide_by(modulus_polynomial, modulus_number)
-    return a
+def reduce_array_modulo(array: npt.NDArray[np.int_], modulus_polynomial: Polynomial, modulus_number: int)->npt.NDArray[np.int_]:
+    f = lambda x: x.divide_by(modulus_polynomial, modulus_number)[1].reduced_modulo_scalar(modulus_number)
+    f = np.vectorize(f)
+    return f(array)
