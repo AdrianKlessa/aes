@@ -77,10 +77,10 @@ class Polynomial:
         :param scalar: Modulus for coefficients
         :return: Polynomial with reduced coefficients
         """
-        coeffs = np.copy(self.coefficients).tolist()
-        for i in range(len(coeffs)):
-            coeffs[i] %= scalar
+        coeffs = np.copy(self.coefficients)
+        coeffs = coeffs % scalar
         return Polynomial(coeffs)
+
 
     def divide_by(self, other_polynomial: Polynomial, mod_number: int | None = None) -> tuple[Polynomial, Polynomial]:
         """
